@@ -2,3 +2,6 @@
 /src/androidTest
 /src/test
 *.iml
+/.gradle
+/.idea
+/local.properties

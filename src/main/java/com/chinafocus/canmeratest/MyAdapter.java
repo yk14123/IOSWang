@@ -8,16 +8,17 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewParent;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatImageView;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.ads.InterstitialAd;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
@@ -28,10 +29,13 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
     // 表示该位置是随机中奖位！
     private int bingo;
 
-    public MyAdapter(int spanCount) {
+    private InterstitialAd mInterstitialAd;
+
+    public MyAdapter(int spanCount, InterstitialAd interstitialAd) {
         this.items = spanCount;
         imageViewList = new ArrayList<>();
         randomSize(spanCount);
+        mInterstitialAd = interstitialAd;
     }
 
     /**
@@ -54,14 +58,15 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
+
                 if (myViewHolder.getAdapterPosition() == bingo) {
+                    ((AppCompatImageView) v).setImageResource(R.drawable.cry);
                     imageViewList.remove(v);
                     if (imageViewList.size() == 0) {
                         animTranslationEnd(v);
                         return;
                     }
                     for (AppCompatImageView temp : imageViewList) {
-                        temp.setImageResource(R.drawable.cry);
                         animTranslationY(temp);
                     }
                     imageViewList.clear();
@@ -72,7 +77,6 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
                         }
                     }, 500);
                 } else {
-                    ((AppCompatImageView) v).setImageResource(R.drawable.cry);
                     animTranslationY(v);
                     imageViewList.remove(v);
                 }
@@ -130,35 +134,56 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
         bingoView = v;
         // Our view is added to the parent of its parent, the most top-level layout
         final ViewGroup container = (ViewGroup) v.getParent().getParent();
-        container.getOverlay().add(v);
+        if (container != null) {
+            container.getOverlay().add(v);
 
-        int[] recyclerPos = new int[2];
-        container.getLocationOnScreen(recyclerPos);
-        int centerWidth = container.getWidth() / 2;
-        int centerHeight = container.getWidth() / 2;
+            int[] recyclerPos = new int[2];
+            container.getLocationOnScreen(recyclerPos);
+            int centerWidth = container.getWidth() / 2;
+            int centerHeight = container.getWidth() / 2;
 
-        int[] vPos = new int[2];
-        v.getLocationOnScreen(vPos);
-        int vWidth = v.getWidth();
-        int vHeight = v.getHeight();
-        int vCenterX = vWidth / 2 + vPos[0];
-        int vCenterY = vHeight / 2 + vPos[1];
+            int[] vPos = new int[2];
+            v.getLocationOnScreen(vPos);
+            int vWidth = v.getWidth();
+            int vHeight = v.getHeight();
+            int vCenterX = vWidth / 2 + vPos[0];
+            int vCenterY = vHeight / 2 + vPos[1];
 
-        int offsetX = centerWidth - vCenterX;
-        int offsetY = centerHeight - vCenterY;
+            int offsetX = centerWidth - vCenterX;
+            int offsetY = centerHeight - vCenterY;
 
-        float scale = centerWidth * 2.f / vWidth;
+            float scale = centerWidth * 2.f / vWidth;
 
-        ObjectAnimator animY = ObjectAnimator.ofFloat(v, "translationY", offsetY);
-        ObjectAnimator animX = ObjectAnimator.ofFloat(v, "translationX", offsetX);
-        ObjectAnimator scaleX = ObjectAnimator.ofFloat(v, "scaleX", 1, scale);
-        ObjectAnimator scaleY = ObjectAnimator.ofFloat(v, "scaleY", 1, scale);
+            ObjectAnimator animY = ObjectAnimator.ofFloat(v, "translationY", offsetY);
+            ObjectAnimator animX = ObjectAnimator.ofFloat(v, "translationX", offsetX);
+            ObjectAnimator scaleX = ObjectAnimator.ofFloat(v, "scaleX", 1, scale);
+            ObjectAnimator scaleY = ObjectAnimator.ofFloat(v, "scaleY", 1, scale);
 
-        AnimatorSet set = new AnimatorSet();
-        set.setDuration(1000);
-        set.playTogether(animX, animY, scaleX, scaleY);
-        set.start();
+            AnimatorSet set = new AnimatorSet();
+            set.setDuration(1000);
+            set.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    super.onAnimationEnd(animation);
+                    if (getChance(20)) {
+                        if (mInterstitialAd.isLoaded()) {
+                            mInterstitialAd.show();
+                        } else {
+                            Log.d("TAG", "The interstitial wasn't loaded yet.");
+                        }
+                    }
+                }
+            });
+            set.playTogether(animX, animY, scaleX, scaleY);
+            set.start();
+        }
+    }
 
+    public boolean getChance(int percentage) {
+        Random random = new Random();
+        int i = random.nextInt(99);
+        Log.d("TAG", " i >> " + i);
+        return i >= 0 && i < percentage;
     }
 
     /**

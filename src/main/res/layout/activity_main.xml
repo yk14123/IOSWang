@@ -5,21 +5,31 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    android:background="@color/background_color"
+    tools:context=".GameActivity">
 
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/bt_recover"
-        android:text="开始新一局"
-        android:onClick="recover"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        app:navigationIcon="@drawable/back_icon"
+        android:background="@color/toolBar_background_color"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"/>
 
     <androidx.recyclerview.widget.RecyclerView
-        android:background="#f0f"
         android:layout_centerVertical="true"
         android:id="@+id/rv_home"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
+
+    <com.google.android.gms.ads.AdView
+        xmlns:ads="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/adView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        ads:adSize="BANNER"
+        ads:adUnitId="ca-app-pub-1017960427612207/7499179201">
+    </com.google.android.gms.ads.AdView>
 
 </RelativeLayout>
